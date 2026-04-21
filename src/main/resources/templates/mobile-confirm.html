@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Authorize Login</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body { font-family: -apple-system, sans-serif; padding: 2rem; background-color: #f4f7f6; text-align: center; }
+        .card { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .btn { display: inline-block; padding: 1rem 2rem; background-color: #007AFF; color: white; border-radius: 8px; text-decoration: none; border: none; font-size: 1.1rem; cursor: pointer; margin-top: 1rem; }
+        .btn-confirm { background-color: #34C759; }
+        .success { color: #34C759; display: none; margin-top: 1rem; font-weight: bold; }
+        .error { color: #FF3B30; display: none; margin-top: 1rem; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>Confirm Login</h2>
+        <p>A web browser is requesting access to your account.</p>
+        
+        <div id="action-area">
+            <button class="btn btn-confirm" onclick="confirmLogin()">Authorize Login</button>
+        </div>
+        
+        <div id="success-msg" class="success">
+            Success! You can close this window now.
+        </div>
+        <div id="error-msg" class="error">
+            Failed to authorize. Token might be expired.
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        const token = [[${token}]];
+        
+        async function confirmLogin() {
+            const errorMsg = document.getElementById('error-msg');
+            errorMsg.style.display = 'none';
+            
+            try {
+                // The username is now automatically determined by the server's security context
+                const response = await fetch(`./confirm/${token}`, {
+                    method: 'POST'
+                });
+                
+                if (response.ok) {
+                    document.getElementById('action-area').style.display = 'none';
+                    document.getElementById('success-msg').style.display = 'block';
+                } else {
+                    const text = await response.text();
+                    errorMsg.innerText = 'Error: ' + text;
+                    errorMsg.style.display = 'block';
+                }
+            } catch (err) {
+                console.error(err);
+                errorMsg.innerText = 'Network Error: ' + err.message;
+                errorMsg.style.display = 'block';
+            }
+        }
+    </script>
+</body>
+</html>

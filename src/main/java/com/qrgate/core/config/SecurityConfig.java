@@ -13,6 +13,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
 @EnableWebSecurity
@@ -25,13 +26,16 @@ public class SecurityConfig {
         http
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "/auth/**",
+                                "/auth/qr/init",
+                                "/auth/qr/status/**",
+                                "/auth/qr/exchange/**",
                                 "/login",
-                                "/ws/**",
+                                "/register",
                                 "/h2-console/**",
                                 "/css/**",
                                 "/js/**"
                         ).permitAll()
+                        .requestMatchers("/auth/qr/mobile/**", "/auth/qr/confirm/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
@@ -40,12 +44,13 @@ public class SecurityConfig {
                         .permitAll()
                 )
                 .logout(logout -> logout
-                        .logoutSuccessUrl("/login")
+                        .logoutRequestMatcher(new AntPathRequestMatcher("/logout", "GET"))
+                        .logoutSuccessUrl("/login?logout")
                         .permitAll()
                 )
                 .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin))
                 .csrf(csrf -> csrf
-                        .ignoringRequestMatchers("/auth/qr/confirm", "/auth/qr/exchange", "/h2-console/**")
+                        .ignoringRequestMatchers("/auth/qr/confirm/**", "/auth/qr/exchange/**", "/h2-console/**")
                 );
 
         return http.build();

@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>QrGate - Dashboard</title>
+    <style>
+        body { font-family: sans-serif; padding: 2rem; background-color: #f4f7f6; }
+        .container { background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 800px; margin: 0 auto; }
+        h1 { color: #333; }
+        .user-info { margin-top: 1rem; padding: 1rem; background: #e8f5e9; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Welcome to QrGate Dashboard</h1>
+        <div class="user-info">
+            <p>You have successfully logged in!</p>
+            <p>Authentication Method: <strong>QR Code Gateway</strong></p>
+        </div>
+        <div style="margin-top: 2rem;">
+            <a th:href="@{/logout}">Logout</a>
+        </div>
+    </div>
+</body>
+</html>

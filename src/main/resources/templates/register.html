@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>QrGate - Register</title>
+    <style>
+        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #f4f7f6; }
+        .register-container { background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 400px; text-align: center; }
+        input { width: 100%; padding: 0.5rem; margin: 0.5rem 0; box-sizing: border-box; }
+        button { width: 100%; padding: 0.5rem; background-color: #4CAF50; color: white; border: none; cursor: pointer; margin-top: 1rem; }
+        .error { color: red; margin-bottom: 1rem; }
+    </style>
+</head>
+<body>
+    <div class="register-container">
+        <h2>Create Account</h2>
+        <div th:if="${param.error}" class="error">Username already exists!</div>
+        <form th:action="@{/register}" method="post">
+            <input type="text" name="fullName" placeholder="Full Name" required />
+            <input type="email" name="email" placeholder="Email Address" required />
+            <input type="text" name="username" placeholder="Username" required />
+            <input type="password" name="password" placeholder="Password" required />
+            <button type="submit">Register</button>
+        </form>
+        <p style="margin-top: 1rem;">Already have an account? <a th:href="@{/login}">Login</a></p>
+    </div>
+</body>
+</html>

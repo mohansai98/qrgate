@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>QrGate - Login</title>
+    <style>
+        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #f4f7f6; }
+        .login-container { background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 400px; text-align: center; }
+        .qr-section { margin-top: 2rem; padding: 1rem; border-top: 1px solid #eee; }
+        #qr-code { width: 200px; height: 200px; margin: 0 auto; }
+        .status { margin-top: 1rem; font-weight: bold; color: #666; }
+        .hidden { display: none; }
+        input { width: 100%; padding: 0.5rem; margin: 0.5rem 0; box-sizing: border-box; }
+        button { width: 100%; padding: 0.5rem; background-color: #4CAF50; color: white; border: none; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h2>QrGate Login</h2>
+        <div th:if="${param.registered}" style="color: green; margin-bottom: 1rem;">Registration successful! Please login.</div>
+        <form th:action="@{/login}" method="post">
+            <input type="text" name="username" placeholder="Username" required />
+            <input type="password" name="password" placeholder="Password" required />
+            <button type="submit">Login</button>
+        </form>
+        <p style="margin-top: 1rem;">Don't have an account? <a th:href="@{/register}">Register here</a></p>
+
+        <div class="qr-section">
+            <p>Or scan to log in</p>
+            <div id="qr-container">
+                <img id="qr-image" src="" alt="QR Code" class="hidden">
+                <div id="qr-placeholder">Generating QR...</div>
+                <div id="debug-url" style="font-size: 0.7rem; color: #999; margin-top: 5px; word-break: break-all;"></div>
+            </div>
+            <div id="qr-status" class="status">Waiting for scan...</div>
+        </div>
+    </div>
+
+    <script>
+        let sessionId = null;
+        let pollInterval = null;
+
+        async function initQr() {
+            try {
+                const response = await fetch('/auth/qr/init');
+                const data = await response.json();
+                sessionId = data.sessionId;
+                document.getElementById('qr-image').src = data.qrCode;
+                document.getElementById('qr-image').classList.remove('hidden');
+                document.getElementById('qr-placeholder').classList.add('hidden');
+                
+                // Extract the URL from the base-url/controller logic if we passed it, 
+                // but since we only passed qrCode (image), let's just log it in the controller for now 
+                // or better, pass the URL back in the JSON for verification.
+                if(data.url) document.getElementById('debug-url').innerText = data.url;
+                
+                startPolling();
+            } catch (err) {
+                console.error('Failed to init QR', err);
+            }
+        }
+
+        function startPolling() {
+            pollInterval = setInterval(async () => {
+                try {
+                    const response = await fetch(`/auth/qr/status/${sessionId}`);
+                    const data = await response.json();
+                    
+                    document.getElementById('qr-status').innerText = 'Status: ' + data.status;
+
+                    if (data.status === 'CONFIRMED') {
+                        clearInterval(pollInterval);
+                        exchangeToken();
+                    } else if (data.status === 'EXPIRED') {
+                        clearInterval(pollInterval);
+                        document.getElementById('qr-status').innerText = 'QR Expired. Refreshing...';
+                        setTimeout(initQr, 2000);
+                    }
+                } catch (err) {
+                    console.error('Polling error', err);
+                }
+            }, 2000);
+        }
+
+        async function exchangeToken() {
+            try {
+                const response = await fetch(`/auth/qr/exchange/${sessionId}`, { method: 'POST' });
+                const data = await response.json();
+                if (data.token) {
+                    // In a real app, you'd set this token in local storage or a cookie
+                    // For this demo, we'll just redirect to dashboard
+                    window.location.href = '/dashboard';
+                }
+            } catch (err) {
+                console.error('Exchange error', err);
+            }
+        }
+
+        initQr();
+    </script>
+</body>
+</html>
